@@ -1,0 +1,34 @@
+idea:
+  title: A Map of Vibe Space
+  domain: nlp
+  hypothesis: 'Prompting a language model with web pages and asking "What is this
+    web page giving? Start your answer with ''it''s giving''", then embedding the
+    outputs and visualizing them as a graph, will enable users to browse the web based
+    on similarity in "vibe space" rather than traditional hyperlink or topical structure.
+
+    '
+  background:
+    description: 'Perplexity or Google or whoever should take their index of the web
+      and do the following:
+
+      Prompt a model with each page separately and ask ''What is this web page  giving?
+      Start your answer with "it''s giving"''
+
+      Embed the outputs
+
+      Allow me to browse the web on a graph that shows pages that are close  in vibe
+      space but past a critical threshold of clicks (say minimum 3, to avoid the same
+      website, etc.)
+
+      I want to navigate the internet as a map of vibe space.
+
+      '
+  metadata:
+    author: Ari Holtzman
+    source: IdeaHub
+    source_url: https://hypogenic.ai/ideahub/idea/uLE194FYI1dsdSWYwdLd
+    idea_id: a_map_of_vibe_space_20260323_164843_8fff895a
+    created_at: '2026-03-23T16:48:43.837437'
+    status: submitted
+    github_repo_name: map-of-vibe-space-claude
+    github_repo_url: https://github.com/Hypogenic-AI/map-of-vibe-space-claude

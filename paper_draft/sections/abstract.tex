@@ -1,0 +1,6 @@
+Current web navigation organizes content by topic, authority, and behavioral signals, but no existing system captures the \emph{aesthetic character}---or \emph{vibe}---of a web page.
+We propose a pipeline that prompts a large language model with web page text and the question ``What is this web page giving?'' to elicit concise vibe descriptions in contemporary internet vernacular.
+We embed these descriptions with a sentence transformer and project them to two dimensions with UMAP, producing a navigable \emph{vibe map} in which proximity reflects aesthetic similarity rather than topical overlap.
+On 497 pages sampled from the C4 corpus, we find that vibe space organizes content in a fundamentally different way from raw-text embedding space: the Adjusted Rand Index between the two clusterings is only 0.113 ($p{=}0.0002$), and vibe-space nearest neighbors have dramatically lower content similarity than raw-space neighbors (Cohen's $d{=}1.44$).
+We identify 293 cross-domain page pairs---pages about entirely different subjects that cluster together because they share the same aesthetic energy.
+These results establish that LLM-generated vibe descriptions capture a genuinely novel dimension of web content, opening the door to \emph{browse-by-vibe} as a new modality for web discovery.

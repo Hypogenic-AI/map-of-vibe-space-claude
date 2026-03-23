@@ -1,0 +1,27 @@
+{
+  "success": true,
+  "stages": {
+    "resource_finder": {
+      "success": true,
+      "completion_marker": "/workspaces/map-of-vibe-space-claude/.resource_finder_complete",
+      "outputs": {
+        "literature_review": "/workspaces/map-of-vibe-space-claude/literature_review.md",
+        "resources_catalog": "/workspaces/map-of-vibe-space-claude/resources.md",
+        "papers_dir": "/workspaces/map-of-vibe-space-claude/papers",
+        "datasets_dir": "/workspaces/map-of-vibe-space-claude/datasets",
+        "code_dir": "/workspaces/map-of-vibe-space-claude/code"
+      },
+      "log_file": "/workspaces/map-of-vibe-space-claude/logs/resource_finder_claude.log",
+      "transcript_file": "/workspaces/map-of-vibe-space-claude/logs/resource_finder_claude_transcript.jsonl",
+      "elapsed_time": 1544.8930785655975
+    },
+    "experiment_runner": {
+      "success": true,
+      "return_code": 0,
+      "elapsed_time": 1730.0254476070404,
+      "log_file": "/workspaces/map-of-vibe-space-claude/logs/execution_claude.log",
+      "transcript_file": "/workspaces/map-of-vibe-space-claude/logs/execution_claude_transcript.jsonl"
+    }
+  },
+  "work_dir": "/workspaces/map-of-vibe-space-claude"
+}

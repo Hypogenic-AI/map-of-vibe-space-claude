@@ -1,0 +1,31 @@
+\section{Introduction}
+\label{sec:intro}
+
+How people find web content has changed remarkably little since the advent of search engines.
+Users type keywords, follow hyperlinks, or accept algorithmic recommendations---all of which organize the web by \emph{topic}, authority, or past behavior.
+Yet when someone describes a web page informally, they rarely lead with its subject matter.
+Instead, they reach for aesthetic shorthand: a site ``gives early-2010s personal blog energy,'' or ``has that corporate LinkedIn vibe.''
+This subjective, cultural dimension---what we call the \emph{vibe} of a page---is invisible to every existing navigation system.
+
+{\bf Why does vibe matter?}
+Vibes capture information orthogonal to topic: a Romanian collaboration blog and a British movie review site may share nothing in subject matter, yet both project the same warm, hand-crafted, personal-blog energy.
+A user looking for content that \emph{feels} a certain way has no tool to find it; current systems cannot surface the latent aesthetic structure of the web.
+Recent work has begun to formalize the notion of ``vibes'' as measurable axes of variation in LLM outputs~\cite{dunlap2024vibecheck}, but this line of research has not yet been applied to web content at large.
+
+{\bf Our approach.}
+We propose a simple three-stage pipeline (\figref{fig:maps}): (1)~prompt a large language model with the text of a web page and ask ``\emph{What is this web page giving? Start your answer with `it's giving'},'' (2)~embed the resulting vibe description with a sentence transformer, and (3)~project the embeddings to two dimensions with UMAP to produce an interactive \emph{vibe map}.
+We compare this vibe space against a baseline content space formed by directly embedding the raw page text.
+On 497 pages from the \cfour corpus~\cite{raffel2020exploring}, vibe space and content space disagree substantially: the Adjusted Rand Index between their clusterings is only 0.113 ($p{=}0.0002$), and vibe-space neighbors exhibit a Cohen's $d{=}1.44$ reduction in raw-text similarity relative to content-space neighbors.
+We find 293 cross-domain page pairs that cluster together in vibe space despite covering entirely different topics.
+
+Our contributions are:
+\begin{itemize}[leftmargin=*,itemsep=0pt,topsep=0pt]
+    \item We introduce a pipeline that transforms web pages into vibe descriptions using a culturally grounded LLM prompt and show that the resulting embeddings capture aesthetic similarity distinct from topical similarity.
+    \item We provide quantitative evidence that vibe space organizes pages differently from content space, with strong statistical significance and large effect sizes across multiple evaluation metrics.
+    \item We demonstrate cross-domain discovery: pages about unrelated subjects cluster together when they share aesthetic character, enabling a fundamentally new mode of web browsing.
+\end{itemize}
+
+The remainder of this paper is organized as follows.
+\Secref{sec:related} reviews related work on embedding visualization, LLM-based content description, and style-aware representations.
+\Secref{sec:method} describes our pipeline and evaluation methodology.
+\Secref{sec:results} presents quantitative and qualitative results, and \secref{sec:discussion} discusses limitations and future directions.

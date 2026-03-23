@@ -1,0 +1,36 @@
+{
+  "silhouette_bootstrap": {
+    "raw": {
+      "mean": 0.0533242691680789,
+      "ci_low": 0.0463447755202651,
+      "ci_high": 0.060903892107307914
+    },
+    "vibe": {
+      "mean": 0.06769948292151093,
+      "ci_low": 0.05601386930793524,
+      "ci_high": 0.07998988255858422
+    }
+  },
+  "ari_permutation": {
+    "observed_ari": 0.11282374037984336,
+    "p_value": 0.0001999600079984003,
+    "significant": true
+  },
+  "neighbor_overlap": {
+    "mean_overlap": 0.7525150905432596,
+    "std_overlap": 0.8588038053772378,
+    "expected_random": 0.05030181086519115,
+    "t_stat": 18.210250346900327,
+    "p_value": 4.069484715897499e-57
+  },
+  "content_diversity": {
+    "raw_neighbors_content_sim": 0.33856871724128723,
+    "vibe_neighbors_content_sim": 0.17760661244392395,
+    "mann_whitney_p": 0.0,
+    "cohens_d": 1.4425007104873657
+  },
+  "dimensionality": {
+    "raw_90pct_components": 178,
+    "vibe_90pct_components": 128
+  }
+}

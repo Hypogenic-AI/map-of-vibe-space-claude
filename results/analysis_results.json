@@ -1,0 +1,142 @@
+{
+  "diversity": {
+    "total": 497,
+    "unique": 497,
+    "unique_pct": 100.0,
+    "avg_length": 253.73239436619718,
+    "type_token_ratio": 0.3367457480229661,
+    "its_giving_compliance": 33,
+    "top_openings": [
+      [
+        "aspirational parent-core, open",
+        1
+      ],
+      [
+        "legal realness meets",
+        1
+      ],
+      [
+        "conference-core meets hydrology",
+        1
+      ],
+      [
+        "sacred girlboss energy\u2014spiritual",
+        1
+      ],
+      [
+        "leisurely island-core, golden",
+        1
+      ],
+      [
+        "2008 indie blog",
+        1
+      ],
+      [
+        "academic glow-up meets",
+        1
+      ],
+      [
+        "suburban mom core,",
+        1
+      ],
+      [
+        "academic transition energy\u2014like",
+        1
+      ],
+      [
+        "luxury destination wedding",
+        1
+      ],
+      [
+        "\"main character energy",
+        1
+      ],
+      [
+        "retro kitchen-core meets",
+        1
+      ],
+      [
+        "chaotic girl dinner",
+        1
+      ],
+      [
+        "\"expat linkedin energy\"",
+        1
+      ],
+      [
+        "horse girl core",
+        1
+      ]
+    ]
+  },
+  "clustering": {
+    "5": {
+      "sil_raw": 0.03267410397529602,
+      "sil_vibe": 0.06390203535556793,
+      "ari": 0.13687443757818882
+    },
+    "10": {
+      "sil_raw": 0.037475645542144775,
+      "sil_vibe": 0.05320773273706436,
+      "ari": 0.11282374037984336
+    },
+    "15": {
+      "sil_raw": 0.034545548260211945,
+      "sil_vibe": 0.06012822687625885,
+      "ari": 0.10339515162141844
+    },
+    "20": {
+      "sil_raw": 0.03666900098323822,
+      "sil_vibe": 0.05866728723049164,
+      "ari": 0.1000615540701469
+    }
+  },
+  "nearest_neighbors": {
+    "avg_neighbor_overlap": 0.15050301810865194,
+    "raw_neighbor_content_sim": 0.33856871724128723,
+    "vibe_neighbor_content_sim": 0.17760661244392395,
+    "K": 5
+  },
+  "cross_domain_examples": [
+    {
+      "page_a_text": "Pentru propuneri/colaborari/ proiecte imi puteti scrie pe adresa: adina.necula@gmail.com .\nHey Buddy!, I found this information for you: \"Contact\". He",
+      "page_b_text": "\u2018Taken\u2019. I can watch most things with Liam Neeson in (and listen to as well- he did a great cover of the Van Morrison \u2018Coney Island\u2019 a few years back)",
+      "page_a_vibe": "It\u2019s giving early-2010s personal blog realness\u2014straight-to-the-point, no-frills, email-on-display energy, like a DM slide before DMs were a thing. Professional but approachable, with a dash of \u201clet\u2019s collab, but keep it casual.\u201d",
+      "page_b_vibe": "It\u2019s giving early-2000s blog energy: cozy-chaotic stream-of-consciousness, a little self-aware snark, and the vibe of someone decompressing with pop culture takes between Big Thoughts\u2122\u2014like Tumblr meets church council aftercare. Think: personal taste flexes, DVD nostalgia, and the lowkey confessional warmth of an email from your witty, slightly exhausted friend.",
+      "vibe_similarity": 0.814995527267456,
+      "raw_similarity": -0.10087613016366959
+    },
+    {
+      "page_a_text": "Share your tips and tricks and anything you feel important for our little community!\nwow thanks for the very nice comment and request.\nWe put this on ",
+      "page_b_text": "Is the IP address of the WPF user automatically detected?\nYes, it is automatically detected.\nHowever you can still detect it yourself if you want and ",
+      "page_a_vibe": "it\u2019s giving cozy niche forum energy, late-2000s DIY train sim community, and earnest tech support vibes\u2014think passionate hobbyists troubleshooting bugs together, homespun updates dropped like secret mixtapes, and a gentle, slightly chaotic charm that feels like an IRC chat with extra exclamation points.",
+      "page_b_vibe": "it\u2019s giving low-key dev forum energy\u2014straight-to-the-point, no-nonsense tech support vibes with a sprinkle of \u201cwe got you, but DIY if you\u2019re feeling extra.\u201d",
+      "vibe_similarity": 0.7724710702896118,
+      "raw_similarity": -0.1149819940328598
+    },
+    {
+      "page_a_text": "its name.  I just open a foo.gpg file and things \"just work\".\nThere's an \"Encryption/Decryption\" submenu which seems \"discoverable\".\nIn what sense doe",
+      "page_b_text": "Share your tips and tricks and anything you feel important for our little community!\nwow thanks for the very nice comment and request.\nWe put this on ",
+      "page_a_vibe": "it\u2019s giving old-school tech forum energy\u2014casual, slightly defensive nerd banter about usability, with a sprinkle of \u201cit works on my machine\u201d and zero patience for user experience hand-holding.",
+      "page_b_vibe": "it\u2019s giving cozy niche forum energy, late-2000s DIY train sim community, and earnest tech support vibes\u2014think passionate hobbyists troubleshooting bugs together, homespun updates dropped like secret mixtapes, and a gentle, slightly chaotic charm that feels like an IRC chat with extra exclamation points.",
+      "vibe_similarity": 0.7695560455322266,
+      "raw_similarity": -0.06751677393913269
+    },
+    {
+      "page_a_text": "Is the IP address of the WPF user automatically detected?\nYes, it is automatically detected.\nHowever you can still detect it yourself if you want and ",
+      "page_b_text": "Where is the mail stored in the filesystem?\nI have zentyal 3 with zarafa configured as the mail gateway.\nWhere in the file system is the user mail sto",
+      "page_a_vibe": "it\u2019s giving low-key dev forum energy\u2014straight-to-the-point, no-nonsense tech support vibes with a sprinkle of \u201cwe got you, but DIY if you\u2019re feeling extra.\u201d",
+      "page_b_vibe": "It\u2019s giving vintage sysadmin forum energy\u2014messy, info-dense, slightly exasperated, and full of \u201ctrust me, I\u2019ve been burned before\u201d wisdom. Think: early 2010s tech support vibes, sprinkled with nerdy camaraderie, low-key rants about bad design decisions, and that eternal cry for sticky threads and more volunteers.",
+      "vibe_similarity": 0.8046497106552124,
+      "raw_similarity": -0.02768643945455551
+    },
+    {
+      "page_a_text": "Pentru propuneri/colaborari/ proiecte imi puteti scrie pe adresa: adina.necula@gmail.com .\nHey Buddy!, I found this information for you: \"Contact\". He",
+      "page_b_text": "Turner_Tiffanie - Today is going to be awesome.Today is going to be awesome.\nPosted by Lisa Congdon on Monday, August 21, 2017 at 7:37 pm. Bookmark th",
+      "page_a_vibe": "It\u2019s giving early-2010s personal blog realness\u2014straight-to-the-point, no-frills, email-on-display energy, like a DM slide before DMs were a thing. Professional but approachable, with a dash of \u201clet\u2019s collab, but keep it casual.\u201d",
+      "page_b_vibe": "it\u2019s giving peak 2010s blog energy\u2014relentlessly optimistic, scrapbook-core, like a digital sticky note your coolest art teacher would leave on your desk, archived in sepia-toned internet nostalgia.",
+      "vibe_similarity": 0.7774813771247864,
+      "raw_similarity": -0.039256736636161804
+    }
+  ]
+}

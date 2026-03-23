@@ -1,0 +1,27 @@
+[project]
+name = "research-workspace"
+version = "0.1.0"
+description = "Research workspace for A Map of Vibe Space"
+requires-python = ">=3.10"
+dependencies = [
+    "datasets>=4.8.4",
+    "matplotlib>=3.10.8",
+    "numpy>=2.2.6",
+    "openai>=2.29.0",
+    "pandas>=2.3.3",
+    "plotly>=6.6.0",
+    "pyarrow>=23.0.1",
+    "scikit-learn>=1.7.2",
+    "seaborn>=0.13.2",
+    "sentence-transformers>=5.3.0",
+    "tqdm>=4.67.3",
+    "trafilatura>=2.0.0",
+    "umap-learn>=0.5.11",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

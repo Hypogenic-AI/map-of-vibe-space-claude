@@ -1,0 +1,33 @@
+\section{Related Work}
+\label{sec:related}
+
+\para{Formalizing vibes in NLP.}
+\citet{dunlap2024vibecheck} introduced \textsc{VibeCheck}, a system that discovers and quantifies qualitative ``vibe'' axes---tone, formatting, writing style---along which LLM outputs differ.
+Their pipeline uses an LLM to examine output pairs, discover vibe axes (e.g., ``formal $\to$ friendly''), and score outputs on each axis.
+While \textsc{VibeCheck} demonstrates that vibes are measurable and predictive (achieving 80\% accuracy at identifying model identity), it is designed for comparing LLM outputs, not for characterizing web content or constructing navigable embedding spaces.
+We extend the concept of vibes from model comparison to web-page description and embed the resulting descriptions to create a spatial map.
+
+\para{Embedding visualization.}
+Interactive visualization of high-dimensional embeddings is a well-studied problem.
+\citet{smilkov2016embedding} introduced the Embedding Projector for exploring word and image embeddings via t-SNE, UMAP, and PCA.
+\citet{polo2023wizmap} proposed \textsc{WizMap}, which scales to millions of points using multi-resolution map-like navigation.
+Most recently, \citet{ren2025embedding} presented Embedding Atlas, a browser-based tool that supports real-time UMAP computation, density contours, and cross-filtering on millions of data points.
+All of these tools visualize \emph{content} or \emph{semantic} embeddings; none address the question of whether a different embedding---one capturing aesthetic character rather than topic---would produce a qualitatively different and useful map.
+Our work contributes a new kind of input to these visualization tools: vibe embeddings.
+
+\para{Interpreting embedding spaces.}
+\citet{tennenholtz2023demystifying} proposed ELM (Embedding Language Model), which trains adapter layers that allow an LLM to generate natural-language descriptions of entities from their embeddings.
+\citet{liu2024visualizing} developed gradient-based methods to overlay spatial word clouds on 2D document projections, making regions of embedding space interpretable.
+\citet{haschka2025multiscale} build hierarchical semantic trees from embedding spaces, revealing multi-scale cluster structure.
+These approaches interpret \emph{existing} embedding spaces; we construct a \emph{new} embedding space by first translating content into vibe descriptions and then embedding those descriptions.
+
+\para{Style and aesthetic representation.}
+Recent work has examined how writing style, as distinct from topic, shapes the geometry of embedding spaces~\cite{embedding_style2025}.
+\citet{navigation2026} model human concept navigation as trajectories through transformer embedding spaces, providing a theoretical framework for browsing semantic maps.
+Our work is complementary: we show that vibe descriptions---which capture style, era, community type, and cultural energy---produce embeddings that organize content along aesthetic axes rather than topical ones.
+
+\para{LLMs and informal language.}
+The ``it's giving'' prompt we use draws on contemporary internet slang.
+\citet{slang2024} and \citet{wilson2024slang} study how LLMs comprehend and produce slang, finding that models trained on large web corpora handle informal language reasonably well.
+\citet{gur2022understanding} demonstrate that LLMs pretrained on natural language transfer effectively to HTML understanding tasks.
+We build on these findings by prompting an LLM with web page text and a slang-inflected question, relying on the model's cultural fluency to produce evocative, aesthetic descriptions.

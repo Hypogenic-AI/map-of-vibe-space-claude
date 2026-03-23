@@ -1,0 +1,10 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have shown that prompting an LLM with web page text and asking ``What is this web page giving?'' produces vibe descriptions that, when embedded, create a space fundamentally different from raw-text embedding space.
+Vibe space captures aesthetic similarity---era, tone, community type, cultural energy---rather than topical similarity, with strong statistical support: \ari of 0.113 ($p{=}0.0002$) between clusterings and a Cohen's $d$ of 1.44 on cross-space neighbor content similarity.
+We identify 293 cross-domain page pairs that cluster together by shared aesthetic character despite covering unrelated subjects.
+
+These results establish the feasibility of \emph{browse-by-vibe} as a new modality for web discovery.
+Future work should scale the pipeline to larger corpora, incorporate visual features from page screenshots, conduct user studies to evaluate browsing utility, and compare vibe descriptions across multiple LLMs and prompt formulations.
+We are particularly interested in whether a small, fine-tuned model can replicate the vibe-description capability of \gptfour at a fraction of the cost, which would be necessary for web-scale deployment.

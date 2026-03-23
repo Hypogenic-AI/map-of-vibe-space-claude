@@ -1,0 +1,32 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\para{Vibe is a real and distinct signal.}
+Our results provide strong evidence that LLM-generated vibe descriptions capture information genuinely different from what raw-text embeddings encode.
+The low \ari (0.10--0.14), large effect size on neighbor content similarity (Cohen's $d{=}1.44$), and consistent results across all values of $k$ all point to the same conclusion: vibe space is not a noisy version of content space but a qualitatively different organization of web content.
+
+\para{Why does the pipeline work?}
+We hypothesize that the ``it's giving'' prompt activates a specific mode of cultural commentary in the LLM---one trained on internet discourse where aesthetic judgments are common.
+The LLM compresses each page's content, layout cues (reflected in text structure), and cultural markers into a concise aesthetic summary.
+The sentence transformer then embeds these summaries in a space where aesthetic similarity translates to geometric proximity.
+
+\para{Implications for web navigation.}
+The existence of a coherent vibe space suggests that ``browse by vibe'' is a feasible navigation modality.
+A user could select a page they enjoy and ask for pages that ``give the same energy,'' surfacing content from entirely different domains.
+This is complementary to topic-based search: where search answers ``what is this about?,'' vibe navigation answers ``what does this \emph{feel} like?''
+
+\para{Limitations.}
+Several limitations qualify our findings.
+First, our sample of 497 pages, while sufficient for statistical testing, is far from web scale.
+Whether vibe clusters remain coherent at millions of pages is an open question.
+Second, we use pre-extracted text from \cfour rather than live HTML; visual design elements (colors, fonts, layout) contribute to vibe but are not captured by our text-only pipeline.
+Third, we test only one LLM (\gptfour) with one prompt; different models or prompts may produce different vibe characterizations.
+Fourth, we lack a user study: we demonstrate structural properties of vibe space but do not test whether humans find it useful for browsing.
+Fifth, the \cfour corpus is predominantly English, and vibe characterizations may be culturally specific to English-language internet culture.
+Finally, cost is a barrier to scale: at approximately \$0.01 per page, processing one billion pages would cost roughly \$10 million without optimization.
+
+\para{Broader impact.}
+A vibe-based navigation system could help users discover content outside their usual information bubbles---not by recommending opposing viewpoints (as diversity interventions typically do), but by connecting content that shares aesthetic character across domain boundaries.
+However, vibes are subjective and culturally situated.
+A system that foregrounds ``vibes'' risks encoding the aesthetic preferences of the LLM's training data, which skews toward English-language, Western internet culture.
+Deploying such a system responsibly would require careful attention to whose vibes are represented and whose are marginalized.

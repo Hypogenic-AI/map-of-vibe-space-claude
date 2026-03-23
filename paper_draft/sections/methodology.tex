@@ -1,0 +1,55 @@
+\section{Methodology}
+\label{sec:method}
+
+We describe a three-stage pipeline that transforms web page text into a two-dimensional vibe map and detail the evaluation protocol we use to assess whether vibe space captures information distinct from content space.
+
+\subsection{Data}
+\label{sec:data}
+
+We draw from the \cfour (Colossal Clean Crawled Corpus) small sample~\cite{raffel2020exploring}, which contains 10{,}000 pre-extracted web page texts hosted on HuggingFace.
+After filtering to pages with at least 200 characters (removing 447 pages), we randomly sample 500 pages with seed 42.
+Three pages fail during LLM processing due to transient API errors, yielding a final working sample of $N{=}497$.
+
+\subsection{Vibe Generation}
+\label{sec:vibe_gen}
+
+For each page, we truncate the text to 2{,}000 characters and prompt \gptfour with the following:
+
+\begin{quote}
+\small
+\textbf{System:} ``You are a cultural commentator who describes the vibe, aesthetic, and energy of things using contemporary internet language. Be specific, evocative, and concise (1--3 sentences).''
+
+\textbf{User:} ``Here is the content of a web page: [TEXT]. What is this web page giving? Start your answer with `it's giving'.''
+\end{quote}
+
+We use temperature 0.7 and a maximum of 150 tokens.
+The prompt is designed to elicit descriptions that foreground aesthetic character---era, tone, community type, cultural energy---rather than topical content.
+The ``it's giving'' framing draws on Gen~Z internet vernacular, encouraging the model to adopt a culturally fluent register.
+
+\subsection{Embedding and Projection}
+\label{sec:embedding}
+
+We embed both the raw page texts and the vibe descriptions using \mpnet~\cite{reimers2019sentence}, a 768-dimensional sentence transformer.
+We then project both sets of embeddings to two dimensions using UMAP~\cite{mcinnes2018umap} with $n_{\text{neighbors}}{=}15$, $\text{min\_dist}{=}0.1$, and cosine distance---standard settings that balance local and global structure preservation.
+
+\subsection{Evaluation Protocol}
+\label{sec:eval}
+
+We evaluate four hypotheses about the relationship between vibe space and content space.
+
+\para{H1: Vibe diversity.}
+We measure whether the LLM produces meaningfully varied descriptions by computing the number of unique descriptions, vocabulary richness (type-token ratio), and mean description length.
+
+\para{H2: Vibe $\neq$ topic.}
+We cluster both embedding spaces with KMeans~\cite{arthur2007kmeans} for $k \in \{5, 10, 15, 20\}$ and compute the Adjusted Rand Index (\ari)~\cite{hubert1985ari} between the two clusterings.
+Low \ari indicates that vibe space groups pages differently from content space.
+We assess significance with a permutation test (10{,}000 permutations).
+
+\para{H3: Cluster quality.}
+We compute silhouette scores~\cite{rousseeuw1987silhouettes} for each space and compare them using bootstrap 95\% confidence intervals (1{,}000 resamples).
+
+\para{H4: Cross-domain discovery.}
+For each page, we identify its $K{=}5$ nearest neighbors in both vibe space and content space (using high-dimensional cosine similarity).
+We measure (a)~the overlap between the two neighbor sets, and (b)~the raw-text cosine similarity of vibe-space neighbors.
+If vibe space enables cross-domain discovery, vibe-space neighbors should have substantially lower content similarity than content-space neighbors.
+We report the Mann--Whitney $U$ statistic and Cohen's $d$ effect size.

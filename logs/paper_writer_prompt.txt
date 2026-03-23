@@ -1,0 +1,840 @@
+You are an academic paper writer. Generate a complete NEURIPS style paper
+based on the experiment results provided.
+
+════════════════════════════════════════════════════════════════════════════════
+                         IMPORTANT: BEFORE YOU START
+════════════════════════════════════════════════════════════════════════════════
+
+Before writing any content, you MUST complete these steps:
+
+1. READ THE SKILL: Review the paper-writer skill at .claude/skills/paper-writer/SKILL.md
+2. READ THE STYLE GUIDE: Study templates/paper_writing/lab_style_guide.md carefully
+3. REVIEW EXAMPLES: Browse paper_examples/ for formatting and language patterns:
+   - Look at sections/1.introduction.tex for language style
+   - Look at tables/*.tex for table formatting
+   - Look at commands/*.tex for macro usage
+4. VERIFY COMMAND TEMPLATES: Command templates (math.tex, general.tex, macros.tex) are pre-copied to paper_draft/commands/
+
+CRITICAL: Reference example papers for FORMATTING and LANGUAGE STYLE only.
+Do NOT copy content, phrasing, or narrative structure from the example papers.
+The examples are in a different research domain - focus only on presentation style.
+
+════════════════════════════════════════════════════════════════════════════════
+                            EXPERIMENT REPORT
+════════════════════════════════════════════════════════════════════════════════
+
+# A Map of Vibe Space
+
+## 1. Executive Summary
+
+We tested whether prompting an LLM with web pages and asking &#34;What is this web page giving?&#34; produces descriptions that, when embedded and projected to 2D, create a navigable &#34;vibe map&#34; capturing aesthetic similarity distinct from topical similarity. Using 497 web pages from the C4 dataset processed through GPT-4.1, we find strong evidence that vibe space organizes pages differently from raw text space: the Adjusted Rand Index between vibe and content clusterings is only 0.113 (p=0.0002), and vibe-space neighbors have dramatically lower content similarity than raw-space neighbors (Cohen&#39;s d=1.44). This confirms that &#34;vibe space&#34; captures a genuinely different dimension of web content.
+
+## 2. Goal
+
+**Hypothesis**: Prompting a language model with web pages and asking &#34;What is this web page giving? Start your answer with &#39;it&#39;s giving&#39;&#34; produces descriptions that, when embedded in vector space, create a navigable &#34;vibe map&#34; where proximity reflects aesthetic similarity rather than topical similarity.
+
+**Why this matters**: Current web navigation (links, search, recommendations) organizes the web by topic, authority, and behavioral signals. No existing system lets users browse web content by *aesthetic character* or *vibe* — the subjective feeling and cultural energy a page projects. A vibe map would enable fundamentally new forms of web discovery: finding content that *feels* the same but covers entirely different subjects.
+
+**Expected impact**: This work validates a pipeline that could be deployed at scale by search engines to offer &#34;browse by vibe&#34; as a navigation modality alongside traditional search.
+
+## 3. Data Construction
+
+### Dataset Description
+- **Source**: C4 (Colossal Clean Crawled Corpus) small sample — 10,000 pre-extracted web page texts from HuggingFace
+- **Working sample**: 497 pages (sampled from 9,553 pages with ≥200 characters)
+- **Selection**: Random stratified sample with seed=42 for reproducibility
+
+### Example Samples
+
+| Page Text (first 100 chars) | Vibe Description |
+|-----|------|
+| &#34;When I officially set my studio up in 2012, I changed the name...&#34; | &#34;It&#39;s giving seasoned creative with main character energy, haunted by their own cringe era but self-aware...&#34; |
+| &#34;You will find here our collection of ecological early learning toys...&#34; | &#34;It&#39;s giving soft girl eco-chic, Montessori-core vibes—gentle textures, dreamy jingles...&#34; |
+| &#34;LinkedIn&#39;s extensive database, coupled with Microsoft&#39;s insights...&#34; | &#34;It&#39;s giving corporate power moves, big tech chessboard energy, and &#39;data is the new oil&#39; vibes...&#34; |
+| &#34;Here at King Tut Printing, in Canoga Park...&#34; | &#34;It&#39;s giving small-biz hustle with big-printer energy—serving up local print shop realness...&#34; |
+
+### Data Quality
+- **API failures**: 3/500 (0.6%) due to transient server errors
+- **Final sample**: 497 successful vibe descriptions
+- **Text length range**: 200-5,000 characters (truncated at 2,000 for prompting)
+
+### Preprocessing Steps
+1. Filter C4 texts to ≥200 characters (removes 447/10,000)
+2. Random sample of 500 pages (seed=42)
+3. Truncate to 2,000 chars for LLM prompt
+4. Generate vibe descriptions via GPT-4.1 (temperature=0.7)
+5. Embed with sentence-transformers `all-mpnet-base-v2`
+6. Project to 2D with UMAP (n_neighbors=15, min_dist=0.1, cosine metric)
+
+## 4. Experiment Description
+
+### Methodology
+
+#### High-Level Approach
+We implement the full pipeline proposed by the research question:
+```
+Web page text → GPT-4.1 (&#34;it&#39;s giving&#34; prompt) → Vibe description
+  → Sentence embedding → UMAP 2D projection → Interactive map
+```
+
+We compare this &#34;vibe space&#34; against a baseline &#34;content space&#34; created by directly embedding the raw page text.
+
+#### Why This Method?
+- **GPT-4.1** for vibe generation: State-of-the-art model with strong understanding of internet culture and slang
+- **all-mpnet-base-v2** for embedding: Best-in-class open sentence embedding model (768 dimensions)
+- **UMAP** for projection: Preserves both local and global structure better than t-SNE
+- **KMeans** for clustering comparison: Simple, interpretable, well-understood
+
+### Implementation Details
+
+#### Tools and Libraries
+| Library | Version | Purpose |
+|---------|---------|---------|
+| openai | 2.29+ | GPT-4.1 API calls |
+| sentence-transformers | 5.3+ | Text embedding |
+| umap-learn | 0.5.11 | Dimensionality reduction |
+| scikit-learn | 1.7+ | Clustering, metrics |
+| plotly | 6.6+ | Interactive visualization |
+| matplotlib/seaborn | 3.10+/0.13+ | Static plots |
+
+#### Hyperparameters
+| Parameter | Value | Selection Method |
+|-----------|-------|------------------|
+| LLM model | gpt-4.1 | Current SOTA |
+| Temperature | 0.7 | Standard for creative tasks |
+| Max tokens | 150 | Sufficient for 1-3 sentence vibes |
+| Embedding model | all-mpnet-base-v2 | Best open sentence embedding |
+| UMAP n_neighbors | 15 | Default, good balance |
+| UMAP min_dist | 0.1 | Default |
+| UMAP metric | cosine | Standard for text embeddings |
+| KMeans k | 5, 10, 15, 20 | Range for sensitivity analysis |
+| Random seed | 42 | Reproducibility |
+
+#### LLM Prompt
+System: &#34;You are a cultural commentator who describes the vibe, aesthetic, and energy of things using contemporary internet language. Be specific, evocative, and concise (1-3 sentences).&#34;
+
+User: &#34;Here is the content of a web page: [TEXT] What is this web page giving? Start your answer with &#39;it&#39;s giving&#39;.&#34;
+
+### Experimental Protocol
+
+#### Reproducibility Information
+- **Random seed**: 42 (set for Python, NumPy, and all algorithms)
+- **Hardware**: 4x NVIDIA RTX A6000 (49GB each), CPU-based for most computations
+- **GPU usage**: Sentence-transformer embedding on CUDA
+- **Execution time**: ~20 min for API calls, ~30 seconds for embedding + UMAP
+- **API cost estimate**: ~$3-5 for 500 GPT-4.1 calls
+
+#### Evaluation Metrics
+
+1. **Vibe Diversity**: Unique description count, vocabulary richness (type-token ratio), opening phrase distribution
+2. **Cluster Silhouette Score**: Cohesion/separation quality of clusters in each space
+3. **Adjusted Rand Index (ARI)**: Agreement between vibe and raw text clusterings (low = different)
+4. **Neighbor Overlap**: Fraction of K=5 nearest neighbors shared between vibe and raw space
+5. **Cross-Domain Content Similarity**: Raw text cosine similarity of vibe-space neighbors
+
+### Raw Results
+
+#### H1: Vibe Description Diversity
+
+| Metric | Value |
+|--------|-------|
+| Total descriptions | 497 |
+| Unique descriptions | 497 (100%) |
+| Avg description length | 254 chars (±61) |
+| Total words | 18,462 |
+| Unique words | 6,217 |
+| Type-token ratio | 0.337 |
+| &#34;It&#39;s giving&#34; compliance | 493/497 (99.2%)* |
+
+*Note: 33/497 (6.6%) start with exact lowercase &#34;it&#39;s giving&#34;; the rest use capitalized &#34;It&#39;s giving&#34; or minor variations — 99.2% include the phrase somewhere.
+
+Every single vibe description is unique, with no two pages receiving the same characterization.
+
+#### H2/H3: Clustering Comparison
+
+| k | Silhouette (Raw) | Silhouette (Vibe) | ARI |
+|---|-----------------|-------------------|-----|
+| 5 | 0.033 | 0.064 | 0.137 |
+| 10 | 0.037 | 0.053 | 0.113 |
+| 15 | 0.035 | 0.060 | 0.103 |
+| 20 | 0.037 | 0.059 | 0.100 |
+
+Bootstrap 95% CIs (k=10): Raw [0.046, 0.061], Vibe [0.056, 0.080]
+
+Permutation test for ARI (k=10): observed=0.113, p=0.0002 (significant)
+
+#### H4: Cross-Domain Nearest Neighbor Analysis
+
+| Metric | Value |
+|--------|-------|
+| Mean neighbor overlap (K=5) | 0.753/5 (15.1%) |
+| Expected random overlap | 0.050/5 (1.0%) |
+| Raw-space neighbor content sim | 0.339 ± 0.087 |
+| Vibe-space neighbor content sim | 0.178 ± 0.132 |
+| Mann-Whitney U p-value | &lt; 0.000001 |
+| Cohen&#39;s d (effect size) | 1.44 (very large) |
+
+#### Embedding Dimensionality
+
+| Space | Components for 90% variance |
+|-------|---------------------------|
+| Raw text | 178 |
+| Vibe | 128 |
+
+Vibe space is more compact (lower effective dimensionality), suggesting it captures a more constrained, coherent signal.
+
+#### Visualizations
+
+**Side-by-side comparison of Raw vs Vibe space:**
+![Raw vs Vibe Space](figures/raw_vs_vibe_space.png)
+
+**Annotated Vibe Map:**
+![Vibe Map Annotated](figures/vibe_map_annotated.png)
+
+**Cluster Quality Comparison:**
+![Cluster Comparison](figures/cluster_comparison.png)
+
+**Neighbor Overlap Distribution:**
+![Neighbor Overlap](figures/neighbor_overlap.png)
+
+**Interactive Map**: See `figures/vibe_map_interactive.html` (open in browser for hover-to-explore experience)
+
+## 5. Result Analysis
+
+### Key Findings
+
+1. **Vibe descriptions are maximally diverse**: 100% unique descriptions with rich vocabulary (6,217 unique words across 18,462 total). The LLM generates genuinely distinctive characterizations for each page.
+
+2. **Vibe space captures different information than content space**: ARI between clusterings is 0.10-0.14 across all k values, meaning only ~10-14% agreement. This is statistically significant (p=0.0002) but very low, confirming vibe ≠ topic.
+
+3. **Vibe clusters have better structure**: Silhouette scores for vibe space (0.053-0.064) consistently exceed raw text space (0.033-0.037), suggesting vibe descriptions create more coherent groupings than raw content.
+
+4. **Vibe space enables cross-domain discovery**: Vibe-space neighbors have dramatically lower raw content similarity (0.178 vs 0.339, Cohen&#39;s d=1.44). This means vibe space genuinely brings together pages from different content domains that share aesthetic character.
+
+5. **293 cross-domain pairs found**: Pages about completely different topics (Romanian personal blog + British movie reviews, gaming forums + train simulator forums, corporate LinkedIn + academic engineering) cluster together because they share the same *vibe* (e.g., &#34;early-2010s blog energy&#34;, &#34;cozy niche forum energy&#34;, &#34;corporate LinkedIn energy&#34;).
+
+### Hypothesis Testing Results
+
+| Hypothesis | Result | Evidence |
+|-----------|--------|----------|
+| H1: Vibe diversity | **Strongly supported** | 100% unique, TTR=0.337 |
+| H2: Vibe ≠ Topic | **Strongly supported** | ARI=0.113, p=0.0002 |
+| H3: Cluster quality | **Supported** | Vibe silhouette &gt; raw silhouette |
+| H4: Cross-domain discovery | **Strongly supported** | d=1.44, 293 cross-domain pairs |
+
+### Surprises and Insights
+
+1. **The LLM understood &#34;vibes&#34; perfectly**: Despite not always starting with lowercase &#34;it&#39;s giving&#34;, GPT-4.1 consistently produced culturally fluent, evocative vibe descriptions using internet-native language (&#34;cottagecore&#34;, &#34;main character energy&#34;, &#34;-core&#34; suffixes, &#34;aesthetic&#34;).
+
+2. **Vibe space is lower-dimensional**: Vibe descriptions need only 128 components for 90% variance vs. 178 for raw text. This suggests vibes occupy a more structured, lower-dimensional manifold — there are fewer &#34;vibe dimensions&#34; than &#34;topic dimensions.&#34;
+
+3. **The strongest cross-domain connections are compelling**: A Romanian collaboration blog and a British movie review blog both described as &#34;early-2010s personal blog energy&#34; — completely different languages and topics, but the same *feeling*.
+
+4. **Forum-type pages consistently cluster by era/energy, not subject**: Gaming forums, tech support forums, and train simulator forums all share &#34;cozy niche forum energy&#34; despite wildly different content.
+
+### Error Analysis
+
+- **API failures**: Only 3/500 (0.6%) — all transient server errors, not content-related
+- **Generic descriptions**: Some pages with very short or uninformative text received somewhat generic vibes, but still unique
+- **Silhouette scores are modest**: Both spaces have relatively low silhouette scores (0.03-0.07), indicating web pages don&#39;t form extremely tight clusters in either space. This is expected given the diversity of web content.
+
+### Limitations
+
+1. **Sample size**: 497 pages is sufficient for statistical testing but far from &#34;map of the internet&#34; scale
+2. **No live web scraping**: We used pre-extracted C4 text, not fresh HTML from URLs
+3. **Single LLM**: Only tested with GPT-4.1; other models may produce different vibe characterizations
+4. **No user study**: We measured structural properties of vibe space but didn&#39;t test whether humans find it useful for browsing
+5. **English-only content bias**: C4 is predominantly English; vibe characterizations may be culturally specific
+6. **Cost at scale**: At ~$0.01/page, processing 1 billion web pages would cost ~$10M — optimization needed
+7. **No &#34;minimum 3 clicks&#34; filtering**: The original idea specified filtering to pages ≥3 clicks apart. We didn&#39;t have link structure data to implement this.
+
+## 6. Conclusions
+
+### Summary
+Prompting GPT-4.1 with web pages and asking &#34;What is this web page giving?&#34; produces uniquely diverse, culturally fluent vibe descriptions that, when embedded, create a space fundamentally different from raw content embedding space. Vibe space captures aesthetic and cultural similarity (era, tone, community type, energy level) rather than topical similarity, enabling cross-domain discovery of pages that &#34;feel&#34; the same despite covering entirely different subjects.
+
+### Implications
+- **For search engines**: Vibe-based navigation is feasible and captures genuinely novel information. A &#34;browse by vibe&#34; feature could complement traditional topic-based search.
+- **For information retrieval**: The vibe embedding pipeline (LLM description → sentence embedding) creates a useful signal that is orthogonal to content embeddings.
+- **For web browsing**: Users could discover unexpected connections — finding that a recipe blog and a DIY hardware blog share the same warm, homespun energy, for example.
+
+### Confidence in Findings
+High confidence in the core finding (vibe ≠ topic) given:
+- Large effect size (Cohen&#39;s d=1.44)
+- Statistical significance (p&lt;0.001)
+- Consistent results across all k values
+- Rich qualitative examples showing compelling cross-domain connections
+
+Moderate confidence in scalability — the pipeline works at 500 pages, but optimization is needed for web scale.
+
+## 7. Next Steps
+
+### Immediate Follow-ups
+1. **Prompt ablation study**: Test alternative prompts (&#34;What&#39;s the aesthetic?&#34;, &#34;Describe the energy&#34;) to see if &#34;it&#39;s giving&#34; is uniquely effective
+2. **Multi-model comparison**: Run the same pipeline with Claude, Gemini, and open-source models (Llama 3)
+3. **Larger scale test**: Process 10K-50K pages to test whether vibe clusters remain coherent at scale
+4. **User study**: Have humans browse the interactive vibe map and evaluate whether it enables useful discovery
+
+### Alternative Approaches
+- **Fine-tuned vibe model**: Train a small model (e.g., Llama 3 8B) specifically for vibe description, reducing cost 100x
+- **Direct vibe embedding**: Skip the text description step and train an embedding model that maps page content directly to vibe space
+- **Hierarchical vibes**: Use the multi-scale semantic structure approach to discover vibe taxonomies
+
+### Broader Extensions
+- **Social media vibe space**: Apply to tweets, TikTok descriptions, Reddit posts
+- **Temporal vibe analysis**: Track how the vibe of a website changes over time
+- **Vibe-based recommendation**: &#34;Show me pages that give the same vibe as this one&#34;
+- **Link structure integration**: Implement the original &#34;minimum 3 clicks&#34; filtering to ensure vibe neighbors are structurally distant
+
+### Open Questions
+1. Is &#34;vibe&#34; universal or culturally specific? Would non-English models produce different vibe spaces?
+2. At what scale does vibe space break down? Are there only ~20-50 distinct vibes, or is the space richer?
+3. Can vibes be computed from visual features (screenshots) instead of text? Would visual vibes agree with textual vibes?
+4. How stable are vibe descriptions across LLM versions and temperatures?
+
+## References
+
+### Papers
+- Dunlap et al. (2024). &#34;VibeCheck: Discover &amp; Quantify Qualitative Differences in LLMs.&#34; ICLR 2025.
+- Ren et al. (2025). &#34;Embedding Atlas: Low-Friction, Interactive Embedding Visualization.&#34; Apple Research.
+- McInnes et al. (2018). &#34;UMAP: Uniform Manifold Approximation and Projection.&#34;
+- Reimers &amp; Gurevych (2019). &#34;Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks.&#34;
+- Tennenholtz et al. (2023). &#34;Demystifying Embedding Spaces using Large Language Models.&#34;
+
+### Tools
+- OpenAI GPT-4.1 API
+- Sentence-Transformers (all-mpnet-base-v2)
+- UMAP-learn
+- Plotly (interactive visualization)
+- scikit-learn (clustering, metrics)
+
+### Datasets
+- C4 Small Sample (10,000 web texts from HuggingFace)
+
+
+════════════════════════════════════════════════════════════════════════════════
+                            RESEARCH PLAN
+════════════════════════════════════════════════════════════════════════════════
+
+# Research Plan: A Map of Vibe Space
+
+## Motivation &amp; Novelty Assessment
+
+### Why This Research Matters
+Current web navigation relies on hyperlinks (structural), search engines (keyword/topic), and recommendation algorithms (behavioral). None of these capture the *aesthetic character* or *vibe* of web content. A user looking for &#34;cozy, handcrafted, indie&#34; content must manually browse and judge each page. This research proposes a fundamentally new navigation paradigm: browsing the web as a spatial map where proximity reflects similarity in vibe rather than topic or link structure.
+
+### Gap in Existing Work
+Per the literature review:
+- **VibeCheck** (Dunlap et al., 2024) formalizes vibes for comparing LLM outputs, but doesn&#39;t apply this to web content or create navigable spaces.
+- **Embedding Atlas** and **WizMap** provide visualization tools but focus on topic/semantic clustering, not aesthetic/vibe clustering.
+- **No prior work** combines: web content extraction → LLM vibe description → sentence embedding → navigable 2D map.
+- The specific &#34;it&#39;s giving&#34; prompt pattern (using Gen Z slang to elicit aesthetic descriptions) is entirely unexplored.
+
+### Our Novel Contribution
+1. A pipeline that transforms web pages into vibe descriptions using a specific LLM prompt pattern (&#34;it&#39;s giving&#34;)
+2. Empirical evidence that vibe-based embeddings capture different information than raw text embeddings (vibe ≠ topic)
+3. A concrete prototype of &#34;vibe space navigation&#34; — an interactive map where distant-in-clicks pages cluster by shared aesthetic
+
+### Experiment Justification
+- **Experiment 1 (Vibe Generation)**: Tests whether LLMs produce meaningfully diverse vibe descriptions from web content, or collapse to generic outputs.
+- **Experiment 2 (Vibe vs. Raw Embedding)**: Tests the core hypothesis — do vibe embeddings organize pages differently than raw text embeddings?
+- **Experiment 3 (Cluster Quality)**: Quantifies whether vibe space reveals meaningful structure beyond topic categories.
+- **Experiment 4 (Cross-Domain Discovery)**: Tests the key user value — can vibe space surface surprising connections between pages from different domains?
+
+## Research Question
+Does prompting an LLM with web pages and asking &#34;What is this web page giving? Start your answer with &#39;it&#39;s giving&#39;&#34; produce descriptions that, when embedded in vector space, create a navigable &#34;vibe map&#34; capturing aesthetic similarity distinct from topical similarity?
+
+## Hypothesis Decomposition
+1. **H1 (Vibe Diversity)**: LLM-generated &#34;it&#39;s giving&#34; descriptions are meaningfully diverse across different web pages (not generic).
+2. **H2 (Vibe ≠ Topic)**: Vibe embeddings cluster pages differently than raw text embeddings — pages with similar vibes but different topics cluster together.
+3. **H3 (Cluster Quality)**: Vibe space exhibits meaningful cluster structure (measurable via silhouette score and qualitative inspection).
+4. **H4 (Cross-Domain Discovery)**: Pages from different traditional categories (e.g., cooking blog and DIY craft site) can be neighbors in vibe space.
+
+## Proposed Methodology
+
+### Approach
+Use the C4 Small dataset (10K pre-extracted web page texts) as our primary corpus. Sample 500 diverse pages for the LLM pipeline (balancing cost and statistical power). Generate vibe descriptions via GPT-4.1, embed them with sentence-transformers, project to 2D with UMAP, and compare against raw text embedding baselines.
+
+### Pipeline
+```
+Web page text → GPT-4.1 (&#34;What is this web page giving?&#34;) → &#34;It&#39;s giving...&#34; description
+→ sentence-transformers (embed) → UMAP (2D projection) → Interactive visualization
+```
+
+### Experimental Steps
+1. **Data sampling**: Select 500 diverse pages from C4 (stratified by text length and content diversity)
+2. **Vibe generation**: Prompt GPT-4.1 with each page&#39;s text + the &#34;it&#39;s giving&#34; prompt
+3. **Embedding**: Embed both raw texts and vibe descriptions using `all-mpnet-base-v2`
+4. **Dimensionality reduction**: UMAP projection to 2D for both embedding sets
+5. **Clustering**: HDBSCAN on both embedding spaces
+6. **Comparison**: Measure cluster overlap (ARI), silhouette scores, nearest-neighbor analysis
+7. **Visualization**: Interactive scatter plots with hover text showing vibe descriptions
+
+### Baselines
+1. **Raw text embedding**: Embed the original web page text directly (no LLM step)
+2. **TF-IDF + topic modeling**: LDA topic clusters as a topical baseline
+3. **Random baseline**: Random 2D positions (sanity check)
+
+### Evaluation Metrics
+- **Silhouette score**: Cluster cohesion/separation quality
+- **Vibe diversity**: Unique n-grams, vocabulary richness across vibe descriptions
+- **Adjusted Rand Index (ARI)**: Agreement between vibe clusters and raw text clusters (low ARI = vibe captures different info)
+- **Cross-domain neighbor rate**: Fraction of nearest neighbors that come from different topic categories
+- **Qualitative coherence**: Manual inspection of vibe clusters for aesthetic consistency
+
+### Statistical Analysis Plan
+- Paired t-tests / Wilcoxon signed-rank for metric comparisons
+- Bootstrap confidence intervals (1000 resamples) for silhouette scores
+- Permutation tests for ARI significance
+- α = 0.05 with Bonferroni correction for multiple comparisons
+
+## Expected Outcomes
+- **Support for hypothesis**: Vibe embeddings produce coherent clusters with high silhouette scores AND low ARI vs. raw text clusters (meaning vibe space captures something different from topic space)
+- **Refutation**: If vibe descriptions are generic/repetitive, or if vibe clusters closely mirror topic clusters (high ARI)
+
+## Timeline and Milestones
+1. Planning: 10 min ✓
+2. Environment setup: 5 min
+3. Data preparation + sampling: 10 min
+4. Vibe generation via GPT-4.1: 20 min (API calls)
+5. Embedding + UMAP: 10 min
+6. Analysis + visualization: 30 min
+7. Documentation: 20 min
+
+## Potential Challenges
+- **API rate limits**: Batch requests, implement retry logic
+- **Generic vibe outputs**: If LLM produces repetitive descriptions → try prompt variations
+- **Cost**: 500 pages × ~1K tokens each ≈ $2-5, well within budget
+- **Short/uninformative pages in C4**: Filter by minimum text length
+
+## Success Criteria
+1. Vibe descriptions show meaningful diversity (&gt;80% unique descriptions)
+2. Vibe clusters have silhouette score &gt; 0.1 (non-trivial structure)
+3. ARI between vibe clusters and raw text clusters &lt; 0.3 (capturing different info)
+4. Qualitative inspection reveals aesthetically coherent vibe neighborhoods
+
+
+════════════════════════════════════════════════════════════════════════════════
+                          LITERATURE REVIEW
+════════════════════════════════════════════════════════════════════════════════
+
+# Literature Review: A Map of Vibe Space
+
+## Research Area Overview
+
+This project sits at the intersection of several active research areas: (1) using LLMs to generate subjective/stylistic descriptions of content, (2) embedding text descriptions in a shared semantic space, and (3) visualizing those embeddings as interactive 2D maps. The core hypothesis is that prompting an LLM with &#34;What is this web page giving? Start your answer with &#39;it&#39;s giving&#39;&#34; produces descriptions that capture the *vibe* or *aesthetic character* of web content, and that embedding these descriptions creates a navigable &#34;vibe space.&#34;
+
+## Key Papers
+
+### 1. VibeCheck: Discover &amp; Quantify Qualitative Differences in LLMs
+- **Authors**: Dunlap, Mandal, Darrell, Steinhardt, Gonzalez (UC Berkeley)
+- **Year**: 2024 (ICLR 2025)
+- **arXiv**: 2410.12851
+- **Key Contribution**: Formalizes &#34;vibes&#34; as measurable axes (tone, formatting, writing style) along which LLM outputs differ. Introduces a system to automatically discover and quantify vibes.
+- **Methodology**: Iterative pipeline: (1) LLM examines output pairs to discover vibe axes (e.g., &#34;formal → friendly&#34;), (2) panel of LLM judges score outputs on each vibe, (3) vibes are filtered for being well-defined (inter-annotator agreement), differentiating (separability score), and user-aligned (preference prediction). Uses Cohen&#39;s Kappa, logistic regression.
+- **Key Results**: Vibes predict model identity with 80% accuracy and human preference with 61% accuracy on Chatbot Arena. Discovered that Llama-3 is more humorous, uses more formatting, comments less on ethics than GPT-4/Claude.
+- **Datasets Used**: Chatbot Arena (Llama-3-70b battles), HC3 (Human ChatGPT Comparison Corpus), CNN/DailyMail, MATH, COCO captions.
+- **Code**: https://github.com/lisadunlap/VibeCheck
+- **Relevance**: **Most directly relevant paper**. Establishes the concept of &#34;vibes&#34; as a formal construct for characterizing text. Our project extends this from comparing LLM outputs to describing web pages via a specific prompt pattern, then mapping the resulting vibe descriptions in embedding space.
+
+### 2. Demystifying Embedding Spaces using Large Language Models
+- **Authors**: Tennenholtz, Chow, Hsu, Jeong, Shani, et al. (Google Research)
+- **Year**: 2023 (ICLR 2024)
+- **arXiv**: 2310.04475
+- **Key Contribution**: Proposes ELM (Embedding Language Model) — trains adapter layers to inject domain embeddings into an LLM, enabling natural language querying of embedding spaces.
+- **Methodology**: Two-stage training: first train adapter W→Z with frozen LLM, then fine-tune all parameters. 25 training tasks for movie/user embeddings from MovieLens 25M. Evaluation via semantic consistency (re-embed output, compare to source) and behavioral consistency (use generated profiles for recommendation).
+- **Key Results**: High semantic consistency (0.77-0.96 cosine similarity) and human evaluation scores (0.56-0.96) across 24 movie tasks. Can describe hypothetical entities at interpolated embedding points.
+- **Relevance**: Demonstrates the inverse of our approach — while we use LLMs to *create* embeddings (via text descriptions), this paper uses LLMs to *interpret* existing embeddings. Could be combined: generate vibe descriptions → embed → use ELM to narrate regions of vibe space.
+
+### 3. Embedding Atlas: Low-Friction, Interactive Embedding Visualization
+- **Authors**: Ren, Hohman, Lin, Moritz (Apple)
+- **Year**: 2025
+- **arXiv**: 2505.06386
+- **Key Contribution**: Scalable, interactive browser-based embedding visualization with automatic clustering, labeling, density contours, and cross-filtering.
+- **Implementation**: WebGPU rendering, DuckDB for in-browser queries, UMAP for projection, SentenceTransformers for embedding. Supports drag-and-drop Parquet loading, Jupyter widget, and CLI.
+- **Key Features**: Millions of points, in-browser UMAP and embedding computation, density contours, real-time nearest-neighbor search, metadata cross-filtering.
+- **Code**: https://github.com/apple/embedding-atlas (MIT license)
+- **Relevance**: **Primary visualization tool** for the project. Can directly render our vibe embeddings as an interactive map. The wine review demo (196K reviews clustered by description) is a close analogue to our web page vibe map.
+
+### 4. WizMap: Scalable Interactive Visualization for Exploring Large ML Embeddings
+- **Authors**: Polo Club of Data Science (Georgia Tech)
+- **Year**: 2023
+- **arXiv**: 2306.09328
+- **Key Contribution**: Multi-resolution embedding visualization using map-like navigation in the browser via WebGL. Scales to millions of points.
+- **Code**: https://github.com/poloclub/wizmap
+- **Relevance**: Alternative visualization approach with multi-resolution summaries and time-evolution animation.
+
+### 5. UMAP: Uniform Manifold Approximation and Projection
+- **Authors**: McInnes, Healy, Melville
+- **Year**: 2018
+- **arXiv**: 1802.03426
+- **Key Contribution**: The foundational dimensionality reduction method for projecting high-dimensional embeddings to 2D while preserving local and global structure.
+- **Relevance**: **Core algorithm** for creating the 2D map from high-dimensional vibe embeddings. Standard choice over t-SNE for its better preservation of global structure and faster computation.
+
+### 6. Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks
+- **Authors**: Reimers, Gurevych
+- **Year**: 2019
+- **arXiv**: 1908.10084
+- **Key Contribution**: Siamese/triplet BERT networks for producing semantically meaningful sentence embeddings suitable for cosine-similarity comparison.
+- **Relevance**: **Core embedding backbone**. The &#34;it&#39;s giving&#34; descriptions need to be embedded using a sentence transformer model (e.g., all-MiniLM-L6-v2 or all-mpnet-base-v2) before UMAP projection.
+
+### 7. Text and Code Embeddings by Contrastive Pre-Training
+- **Authors**: OpenAI
+- **Year**: 2022
+- **arXiv**: 2201.10005
+- **Key Contribution**: Shows contrastive pre-training at scale produces high-quality text embeddings for semantic search and classification.
+- **Relevance**: Alternative embedding approach using OpenAI&#39;s models. Relevant as a comparison embedding backbone.
+
+### 8. Understanding HTML with Large Language Models
+- **Authors**: Gur, Nachum, et al. (Google)
+- **Year**: 2022
+- **arXiv**: 2210.03945
+- **Key Contribution**: Demonstrates LLMs pretrained on natural language transfer well to HTML understanding tasks including semantic classification and description generation.
+- **Relevance**: Validates that LLMs can meaningfully process web page content, which is the first step in our pipeline (feeding web pages to an LLM for vibe description).
+
+### 9. Beyond a Single Extractor: HTML-to-Text Extraction for LLM Pretraining
+- **Authors**: Li, Gardner, et al.
+- **Year**: 2026
+- **arXiv**: 2602.19548
+- **Key Contribution**: Shows extraction strategy significantly impacts what content survives for LLM processing. Different extractors yield substantially different page coverage.
+- **Relevance**: Important for our pipeline — the choice of HTML-to-text extraction tool (e.g., trafilatura, readability) will affect what &#34;vibe&#34; the LLM perceives from each page.
+
+### 10. Embedding Style Beyond Topics
+- **Authors**: Various
+- **Year**: 2025
+- **arXiv**: 2501.00828
+- **Key Contribution**: Analyzes how writing style (beyond topic) affects the geometry of embedding spaces across multiple language models.
+- **Relevance**: Directly relevant — our hypothesis is that &#34;it&#39;s giving&#34; descriptions capture style/vibe rather than topic, and this paper provides evidence that style information exists in embedding spaces.
+
+### 11. Discovering Multi-Scale Semantic Structure in Text Corpora
+- **Authors**: Haschka et al.
+- **Year**: 2025
+- **arXiv**: 2512.23471
+- **Key Contribution**: Builds hierarchical semantic trees from LLM embedding spaces, revealing multi-scale cluster structure.
+- **Relevance**: Provides methodology for understanding hierarchical vibe clusters (e.g., &#34;chill&#34; contains &#34;lo-fi&#34; and &#34;cottagecore&#34; sub-vibes).
+
+### 12. Visualizing Spatial Semantics of Dimensionally Reduced Text Embeddings
+- **Authors**: Liu, North, Faust
+- **Year**: 2024
+- **arXiv**: 2409.03949
+- **Key Contribution**: Gradient-based methods to overlay spatial word clouds on 2D document projections, making regions of embedding space interpretable.
+- **Relevance**: Could be used to label regions of the vibe map with characteristic words/descriptions.
+
+### 13. SLANG: New Concept Comprehension of LLMs
+- **Authors**: Various
+- **Year**: 2024
+- **arXiv**: 2401.12585
+- **Key Contribution**: Addresses how LLMs handle rapidly evolving internet slang and memes.
+- **Relevance**: &#34;It&#39;s giving&#34; is Gen Z slang — this paper is relevant to understanding whether LLMs can properly use such framing in their outputs.
+
+### 14. Toward Informal Language Processing: Knowledge of Slang in LLMs
+- **Authors**: Various
+- **Year**: 2024
+- **arXiv**: 2404.02323
+- **Key Contribution**: Studies how pre-trained LLMs handle slang versus literal equivalents.
+- **Relevance**: Calibrating the &#34;it&#39;s giving&#34; prompt — LLMs may assign lower probability to slang continuations, affecting output quality.
+
+### 15. Leveraging LLMs for Web Scraping
+- **Authors**: Various
+- **Year**: 2024
+- **arXiv**: 2406.08246
+- **Key Contribution**: Using LLMs for structured web content extraction.
+- **Relevance**: Alternative approach to web content extraction for our pipeline.
+
+### 16. Characterizing Human Semantic Navigation as Trajectories in Embedding Space
+- **Authors**: Various
+- **Year**: 2026
+- **arXiv**: 2602.05971
+- **Key Contribution**: Models human concept navigation as trajectories through transformer embedding space.
+- **Relevance**: Directly relevant to the idea of &#34;browsing by vibe similarity&#34; — provides a theoretical framework for how users might navigate through vibe space.
+
+### 17. Embedding Projector: Interactive Visualization and Interpretation of Embeddings
+- **Authors**: Smilkov, Thorat, et al. (Google Brain)
+- **Year**: 2016
+- **arXiv**: 1611.05469
+- **Key Contribution**: The seminal interactive embedding visualization tool supporting t-SNE, UMAP, and PCA projections.
+- **Relevance**: Historical context for embedding visualization tools.
+
+### 18. Pairwise Judgment for Semantic Embedding in Web Search
+- **Authors**: Various
+- **Year**: 2024
+- **arXiv**: 2408.04197
+- **Key Contribution**: Semantic embedding models for web search using Siamese architectures.
+- **Relevance**: Relevant to building similarity-based web page retrieval in vibe space.
+
+## Common Methodologies
+
+1. **LLM-as-descriptor**: Using LLMs to generate natural language descriptions of content (VibeCheck, ELM, our &#34;it&#39;s giving&#34; approach)
+2. **Sentence embedding + UMAP**: Standard pipeline for text-to-2D visualization (Embedding Atlas, WizMap, Embedding Projector)
+3. **LLM-as-judge**: Using LLMs to evaluate and compare outputs (VibeCheck&#39;s panel of judges)
+4. **Contrastive learning for embeddings**: Training embeddings that capture semantic similarity (Sentence-BERT, OpenAI embeddings)
+
+## Standard Baselines
+
+- **Topic-based clustering**: Traditional LDA/TF-IDF topic modeling as a baseline for showing vibe ≠ topic
+- **Direct content embedding**: Embedding the raw web page text (without LLM vibe description) as a comparison
+- **URL-category classification**: Using existing website categories (DMOZ/Curlie) as ground truth clusters
+
+## Evaluation Metrics
+
+- **Cluster quality**: Silhouette score, adjusted Rand index (if ground-truth categories available)
+- **Embedding coherence**: Nearest-neighbor semantic similarity within clusters
+- **User study**: Qualitative assessment of whether the vibe map enables meaningful browsing
+- **Vibe distinctiveness**: Whether different URLs/web pages get different vibe descriptions (vs. generic responses)
+
+## Gaps and Opportunities
+
+1. **No existing work on &#34;vibe-based web browsing&#34;**: The specific idea of creating a navigable vibe space from web content is novel
+2. **&#34;It&#39;s giving&#34; as a prompt**: The use of Gen Z slang framing to elicit aesthetic/vibe descriptions is unexplored
+3. **Web content → vibe → embedding pipeline**: No existing work chains HTML extraction → LLM vibe description → sentence embedding → 2D map
+4. **Comparing vibe similarity vs. topical similarity**: An opportunity to show that vibe space captures something different from traditional topic clustering
+
+## Recommendations for Experiment
+
+- **Primary dataset**: Multi-label web categorization (49K URLs with categories) + C4 web text sample (10K pages)
+- **Recommended baselines**: (1) Direct text embedding of web content, (2) Topic-based clustering (LDA), (3) URL category as ground truth
+- **Recommended metrics**: Silhouette score, ARI vs. ground-truth categories, qualitative vibe coherence
+- **Embedding models**: Start with `all-MiniLM-L6-v2` (fast) and `all-mpnet-base-v2` (more accurate)
+- **Visualization**: Use Embedding Atlas for interactive exploration
+- **Content extraction**: Use `trafilatura` for clean text from URLs
+
+
+════════════════════════════════════════════════════════════════════════════════
+                          PAPER REQUIREMENTS
+════════════════════════════════════════════════════════════════════════════════
+
+Generate a complete academic paper with the following structure:
+
+1. TITLE
+   - Clear, specific, informative
+   - Should convey main finding or contribution
+
+2. AUTHOR
+   - Use this exact author line in the \author{} block: Ari Holtzman and NeuriCo
+
+3. ABSTRACT (150-250 words)
+   - Problem statement
+   - Approach
+   - Key results
+   - Significance
+
+4. INTRODUCTION
+   - Research problem and motivation
+   - Gap in existing work
+   - Our contribution (be specific)
+   - Paper organization
+
+5. RELATED WORK
+   - Organized by theme/approach
+   - Position our work relative to prior work
+   - Cite papers from literature review
+
+6. METHODOLOGY
+   - Clear description of approach
+   - Experimental setup
+   - Datasets used
+   - Evaluation metrics
+   - Baselines
+
+7. RESULTS
+   - Present results with tables and figures
+   - Statistical analysis
+   - Comparison to baselines
+   - Ablation studies (if applicable)
+
+8. DISCUSSION
+   - Interpretation of results
+   - Limitations
+   - Broader implications
+
+9. CONCLUSION
+   - Summary of contributions
+   - Key findings
+   - Future work
+
+10. REFERENCES
+   - BibTeX format
+   - All cited papers
+
+════════════════════════════════════════════════════════════════════════════════
+                          OUTPUT FORMAT
+════════════════════════════════════════════════════════════════════════════════
+
+Create a MODULAR LaTeX project with the following directory structure:
+
+paper_draft/
+├── main.tex              # Main file that imports all sections
+├── references.bib        # BibTeX references
+├── sections/
+│   ├── abstract.tex      # Abstract content
+│   ├── introduction.tex  # Introduction section
+│   ├── related_work.tex  # Related work section
+│   ├── methodology.tex   # Methodology section
+│   ├── results.tex       # Results section
+│   ├── discussion.tex    # Discussion section
+│   └── conclusion.tex    # Conclusion section
+├── figures/              # Directory for any generated figures
+├── tables/               # Directory for complex standalone tables
+└── appendix/             # Directory for appendix sections (if needed)
+
+INSTRUCTIONS:
+1. First, create the directory structure above (mkdir -p paper_draft/sections paper_draft/figures paper_draft/tables paper_draft/appendix)
+2. Write main.tex using the EXACT preamble for NEURIPS:
+
+   \documentclass{article}
+   \usepackage[final]{neurips_2025}  % NEURIPS style (neurips_2025.sty is in paper_draft/)
+   \usepackage[hidelinks]{hyperref}  % REQUIRED: clickable links
+   \usepackage{booktabs}  % REQUIRED: professional tables
+   \usepackage{graphicx}
+   \usepackage{amsmath,amssymb}
+
+   % Import command files
+   \input{commands/math}
+   \input{commands/general}
+   \input{commands/macros}
+
+   % Use this bibliography style:
+   \bibliographystyle{plainnat}
+
+   \author{Ari Holtzman and NeuriCo}
+
+   - Use \input{sections/...} to include each section
+   - Use \bibliography{references} for references
+3. Write each section file with COMPLETE content (no placeholders)
+4. Each section file should include its \section{} command
+5. Write references.bib with all citations in BibTeX format
+6. After writing all files, compile the paper:
+   cd paper_draft && pdflatex -interaction=nonstopmode main.tex && bibtex main && pdflatex -interaction=nonstopmode main.tex && pdflatex -interaction=nonstopmode main.tex
+
+This modular structure allows humans to easily:
+- Edit individual sections without navigating a large file
+- Track changes per section
+- Reuse sections across different paper versions
+
+════════════════════════════════════════════════════════════════════════════════
+                          QUALITY REQUIREMENTS
+════════════════════════════════════════════════════════════════════════════════
+
+- Academic tone throughout
+- All claims must be supported by data from the experiment report
+- Proper citations using \cite{} commands
+- Clear figures and tables with proper captions
+- NO placeholder text - every section must have real content
+- The paper MUST compile without errors
+- If compilation fails, debug and fix the LaTeX errors
+
+════════════════════════════════════════════════════════════════════════════════
+                          LAB WRITING STYLE
+════════════════════════════════════════════════════════════════════════════════
+
+Follow these lab-specific conventions to match our paper style:
+
+1. LANGUAGE STYLE:
+   - Use active voice: "We propose", "We examine", "We focus on"
+   - Be direct and confident: "Our main question is...", "We hypothesize that..."
+   - State things clearly and simply - prefer plain language over jargon
+   - Use bold questions as paragraph organizers: {\bf what is X?}
+   - Include specific quantitative claims: "8.97% over baseline"
+   - Avoid fancy wording: "utilize" → "use", "facilitate" → "help"
+
+2. INTRODUCTION STRUCTURE:
+   - Engaging hook (get to the point quickly)
+   - Problem importance
+   - Gap identification
+   - Your approach with method figure reference
+   - Quantitative preview of results
+   - Contribution bullets (3-4 items, action verbs)
+
+3. CONTRIBUTION LISTS:
+   \begin{itemize}[leftmargin=*,itemsep=0pt,topsep=0pt]
+       \item We propose...
+       \item We conduct...
+       \item We complement...
+   \end{itemize}
+
+4. MODULAR COMMANDS STRUCTURE:
+   Command templates are pre-copied to paper_draft/commands/:
+   - math.tex: Math notation macros
+   - general.tex: Formatting macros
+   - macros.tex: Project-specific term definitions (customize this for your paper)
+
+   In main.tex, include:
+   \input{commands/math}
+   \input{commands/general}
+   \input{commands/macros}
+
+5. REFERENCE CONVENTIONS:
+   Use reference macros from math.tex:
+   - \figref{fig:name} for "figure 1" (lowercase, in-sentence)
+   - \Figref{fig:name} for "Figure 1" (capitalized, start of sentence)
+   - \secref{sec:name} for "section 2"
+
+6. TEXT FORMATTING:
+   - Use \para{Header text} for bold paragraph headers
+   - Define method/dataset names with \textsc and \xspace:
+     \newcommand{\methodname}{\textsc{MethodName}\xspace}
+
+7. TABLE FORMATTING:
+   - Use booktabs package (no vertical lines)
+   - Use \resizebox{\textwidth}{!}{...} for wide tables
+   - Use @{} to remove padding at table edges
+   - Use \cmidrule(lr){x-y} for sub-headers
+   - Use \textsc{} for dataset/method names in headers
+   - Bold best results with {\bf ...}
+
+8. FIGURE FORMATTING:
+   - Use 0.32\textwidth for 3-column subfigures
+   - Use 0.95\linewidth for full-width figures
+   - Use \input{figures/legend} for shared legends
+   - Write self-contained captions explaining key observations
+
+9. RESULTS PRESENTATION:
+   - Define \increase and \decrease for colored arrows (green up, red down)
+   - Bold best results in tables
+   - Report confidence intervals when available
+
+10. ALGORITHM STYLING:
+    - Use algpseudocode with [noend]
+    - Use \triangleright for comments
+
+11. HYPERLINKS (REQUIRED):
+    - Always use \usepackage[hidelinks]{hyperref} or with colored links
+    - All citations, section refs, figure refs, table refs must be clickable
+    - This is essential for reader navigation
+
+════════════════════════════════════════════════════════════════════════════════
+                          WORKFLOW: REVIEW AND REFLECT
+════════════════════════════════════════════════════════════════════════════════
+
+Before calling finish, you MUST complete these review steps:
+
+1. REVIEW RESOURCES (at the start):
+   - Read .claude/skills/paper-writer/SKILL.md for detailed guidance
+   - Study templates/paper_writing/lab_style_guide.md for style conventions
+   - Browse paper_examples/ for formatting and language patterns
+
+2. SELF-REFLECTION (before finishing):
+   After writing all sections, review your work against these criteria:
+
+   LANGUAGE CHECK:
+   - [ ] Is the writing clear and jargon-free?
+   - [ ] Are claims specific with quantitative support?
+   - [ ] Is active voice used throughout?
+
+   FORMATTING CHECK:
+   - [ ] Does main.tex include \input{commands/math}, \input{commands/general}, \input{commands/macros}?
+   - [ ] Is hyperref package included for clickable references?
+   - [ ] Do tables use booktabs (no vertical lines)?
+   - [ ] Are best results bolded in tables?
+   - [ ] Are figures/tables properly captioned?
+
+   STRUCTURE CHECK:
+   - [ ] Does introduction follow: hook → importance → gap → approach → preview → contributions?
+   - [ ] Are contribution bullets specific with action verbs?
+   - [ ] Does the paper compile without errors?
+
+3. FIX ISSUES:
+   - Address any issues found in the self-reflection
+   - Re-compile and verify the PDF looks correct
+
+Only after completing this review should you consider the paper finished.
